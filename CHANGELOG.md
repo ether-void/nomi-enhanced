@@ -6,6 +6,7 @@ All notable changes to Nomi Enhanced will be documented in this file.
 
 ### Fixed
 - Multiple messages playing simultaneously - now only plays the most recent message
+- Fixed the bug of messages not playing on the group messages
 
 ## [1.0] - Initial Release
 

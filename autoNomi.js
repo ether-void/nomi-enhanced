@@ -4,14 +4,35 @@ let highlightEnabled = true; // Default to enabled
 const PROCESSED_ATTRIBUTE = 'data-nomi-autoplay-processed'; // Custom attribute to mark processed messages
 const HIGHLIGHT_PROCESSED_ATTRIBUTE = 'data-nomi-highlight-processed'; // Custom attribute to mark highlight processed messages
 
+const SELECTORS = {
+  MESSAGE_CONTAINER: '.css-fda5tg, .css-1r0bmfq',
+  NOMI_MESSAGE_CONTENT: '.css-fda5tg div[type="Nomi"].css-1aa7664, .css-1r0bmfq div[type="Nomi"].css-s72bf4',
+  NOMI_MESSAGE_WRAPPER: '.css-lpoi82, .css-1glxx1x',
+  SPEAK_BUTTON: '.css-dvxtzn button[aria-label="Speak message"].eg18m7y0',
+  CHAT_CONTAINER: 'main > div > div > div'
+};
+
+/**
+ * Checks if a node has any of the specified classes.
+ * @param {Node} node - The DOM node to check.
+ * @param {string[]} classArray - An array of class names to check for.
+ * @returns {boolean} - True if the node has any of the specified classes, false otherwise.
+ */
+function hasAnyClass(node, classArray) {
+  if (!node || !node.classList || !Array.isArray(classArray)) return false;
+  return classArray.some(cls => node.classList.contains(cls));
+}
+
+
 /**
  * Finds and plays a Nomi message if it's new and unprocessed.
  * @param {Node} messageNode - The DOM node that might be a message.
  */
 function findAndPlayNomiMessage(messageNode) {
+  let messageContainers = SELECTORS.MESSAGE_CONTAINER.replaceAll('.', '').split(', ');
   // Ensure it's an element node and has the general message container class
   if (messageNode.nodeType !== Node.ELEMENT_NODE ||
-    !(messageNode.classList.contains('css-fda5tg') || messageNode.classList.contains('css-1r0bmfq'))) {
+    !(hasAnyClass(messageNode, messageContainers))) {
     return;
   }
 
@@ -26,12 +47,12 @@ function findAndPlayNomiMessage(messageNode) {
   messageNode.setAttribute(PROCESSED_ATTRIBUTE, 'true');
 
   // Check if this message is from Nomi.
-  const nomiMessageContentDiv = messageNode.querySelector('div[type="Nomi"].css-1aa7664, div[type="Nomi"].css-s72bf4');
+  const nomiMessageContentDiv = messageNode.querySelector(SELECTORS.NOMI_MESSAGE_CONTENT);
 
   if (nomiMessageContentDiv) {
-    const nomiMessageContainer = nomiMessageContentDiv.closest('.css-lpoi82, .css-1r0bmfq');
+    const nomiMessageContainer = nomiMessageContentDiv.closest(SELECTORS.NOMI_MESSAGE_WRAPPER);
     if (nomiMessageContainer) {
-      const speakButton = nomiMessageContainer.querySelector('.css-dvxtzn button[aria-label="Speak message"].eg18m7y0');
+      const speakButton = nomiMessageContainer.querySelector(SELECTORS.SPEAK_BUTTON);
       if (speakButton) {
         console.log('Nomi.ai Auto-Play: New Nomi message detected, attempting to click play button:', speakButton);
         speakButton.click();
@@ -59,7 +80,7 @@ const observerCallback = (mutationsList, observer) => {
         if (!initialLoadComplete) {
           // During the initial phase, if nodes are added, mark them as processed
           // so they are not played when initialLoadComplete becomes true.
-          if (node.nodeType === Node.ELEMENT_NODE && node.classList.contains('css-fda5tg')) {
+          if (node.nodeType === Node.ELEMENT_NODE && hasAnyClass(node, SELECTORS.MESSAGE_CONTAINER.replaceAll('.', '').split(', '))) {
             const nomiMsgDiv = node.querySelector('div[type="Nomi"].css-1aa7664');
             if (nomiMsgDiv) { // Only mark Nomi messages
                 node.setAttribute(PROCESSED_ATTRIBUTE, 'true');
@@ -67,9 +88,9 @@ const observerCallback = (mutationsList, observer) => {
           }
           // If the added node itself contains multiple messages (e.g., a wrapper div loaded)
           if (node.nodeType === Node.ELEMENT_NODE) {
-            const potentialMessages = node.querySelectorAll('.css-fda5tg div[type="Nomi"].css-1aa7664');
+            const potentialMessages = node.querySelectorAll(SELECTORS.NOMI_MESSAGE_CONTENT);
             potentialMessages.forEach(nomiMsgDiv => {
-                const parentMessageNode = nomiMsgDiv.closest('.css-fda5tg');
+                const parentMessageNode = nomiMsgDiv.closest(SELECTORS.MESSAGE_CONTAINER);
                 if(parentMessageNode) parentMessageNode.setAttribute(PROCESSED_ATTRIBUTE, 'true');
             });
           }
@@ -79,7 +100,7 @@ const observerCallback = (mutationsList, observer) => {
           highlightAsteriskText(node);
           // If the added node itself contains multiple messages (e.g., a wrapper div loaded)
           if (node.nodeType === Node.ELEMENT_NODE) {
-            const potentialMessages = node.querySelectorAll('.css-fda5tg');
+            const potentialMessages = node.querySelectorAll(SELECTORS.MESSAGE_CONTAINER);
             // Only play the last (most recent) Nomi message
             let lastNomiMessage = null;
             potentialMessages.forEach(potentialMsg => {
@@ -199,7 +220,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
 // Helper functions for highlighting management
 function processExistingMessagesForHighlighting() {
-  const allMessages = document.querySelectorAll('.css-fda5tg');
+  const allMessages = document.querySelectorAll(SELECTORS.MESSAGE_CONTAINER);
   allMessages.forEach(msg => {
     msg.removeAttribute(HIGHLIGHT_PROCESSED_ATTRIBUTE);
     highlightAsteriskText(msg);
@@ -215,7 +236,7 @@ function removeAllHighlighting() {
   });
   
   // Remove processed attributes
-  const allMessages = document.querySelectorAll('.css-fda5tg');
+  const allMessages = document.querySelectorAll(SELECTORS.MESSAGE_CONTAINER);
   allMessages.forEach(msg => {
     msg.removeAttribute(HIGHLIGHT_PROCESSED_ATTRIBUTE);
   });
@@ -237,11 +258,11 @@ async function initializeAutoPlayer() {
   // Examples: document.querySelector('#chat-area'), document.querySelector('div.chat-scroll-region')
   // The sample HTML has `div class="css-16iz7u1"` as a message row, or `css-hkk5kr` for selfie rows.
   // We need the PARENT of these rows.
-  let chatContainer = document.querySelector('main > div > div > div'); // This is a GUESS based on typical layouts. INSPECT AND ADJUST!
+  let chatContainer = document.querySelector(SELECTORS.CHAT_CONTAINER); // This is a GUESS based on typical layouts. INSPECT AND ADJUST!
                                                                      // Often, it's a div that scrolls.
   if (!chatContainer || chatContainer === document.body) { // if the guess is bad or too generic
     // Try to find a more specific parent of the first message.
-    const firstMessageExample = document.querySelector('.css-16iz7u1, .css-fda5tg');
+    const firstMessageExample = document.querySelector(SELECTORS.MESSAGE_CONTAINER);
     if (firstMessageExample && firstMessageExample.parentElement) {
       chatContainer = firstMessageExample.parentElement;
     } else {
@@ -252,10 +273,10 @@ async function initializeAutoPlayer() {
   // --- END CRITICAL SELECTOR ---
 
   // Mark all Nomi messages already present on the page as "processed" so they aren't played.
-  const existingNomiMessages = chatContainer.querySelectorAll('.css-fda5tg div[type="Nomi"].css-1aa7664');
+  const existingNomiMessages = chatContainer.querySelectorAll(SELECTORS.NOMI_MESSAGE_CONTENT);
   let markedCount = 0;
   existingNomiMessages.forEach(nomiMsgDiv => {
-    const parentMessageNode = nomiMsgDiv.closest('.css-fda5tg');
+    const parentMessageNode = nomiMsgDiv.closest(SELECTORS.MESSAGE_CONTAINER);
     if (parentMessageNode && !parentMessageNode.hasAttribute(PROCESSED_ATTRIBUTE)) {
       parentMessageNode.setAttribute(PROCESSED_ATTRIBUTE, 'true');
       markedCount++;
@@ -265,7 +286,7 @@ async function initializeAutoPlayer() {
   
   // Process existing messages for highlighting if enabled
   if (highlightEnabled) {
-    const allExistingMessages = chatContainer.querySelectorAll('.css-fda5tg');
+    const allExistingMessages = chatContainer.querySelectorAll(SELECTORS.MESSAGE_CONTAINER);
     allExistingMessages.forEach(msg => highlightAsteriskText(msg));
   }
 
