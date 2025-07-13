@@ -5,7 +5,7 @@ A Chrome browser extension that enhances your Nomi AI (nomi.ai) experience with 
 ## Features
 
 - **Automatic Voice Playback**: Automatically plays new Nomi messages as they arrive
-- **Text Highlighting**: Highlights text enclosed in asterisks (*like this*) with special formatting
+- **Text Highlighting**: Highlights text enclosed in asterisks \*like this\* with special formatting
 
 ## Installation
 
@@ -21,5 +21,5 @@ A Chrome browser extension that enhances your Nomi AI (nomi.ai) experience with 
 2. Click the extension icon in your browser toolbar to open the toggle popup
 3. Use the switches to enable/disable:
    - Auto-play Nomi messages
-   - Highlight *italic* text
+   - Highlight message enclosed in \*like this\* 
 4. When enabled, new Nomi messages will automatically play their voice and asterisk text will be highlighted
