@@ -1,6 +1,7 @@
 let initialLoadComplete = false;
 let autoPlayEnabled = true; // Default to enabled
 let highlightEnabled = true; // Default to enabled
+let currentObserver = null; // Track current observer to clean up
 const PROCESSED_ATTRIBUTE = 'data-nomi-autoplay-processed'; // Custom attribute to mark processed messages
 const HIGHLIGHT_PROCESSED_ATTRIBUTE = 'data-nomi-highlight-processed'; // Custom attribute to mark highlight processed messages
 
@@ -9,7 +10,8 @@ const SELECTORS = {
   NOMI_MESSAGE_CONTENT: '.css-fda5tg div[type="Nomi"].css-1aa7664, .css-1r0bmfq div[type="Nomi"].css-s72bf4',
   NOMI_MESSAGE_WRAPPER: '.css-lpoi82, .css-1glxx1x',
   SPEAK_BUTTON: '.css-dvxtzn button[aria-label="Speak message"].eg18m7y0',
-  CHAT_CONTAINER: 'main > div > div > div'
+  CHAT_CONTAINER: 'main > div > div > div',
+  CHAT_INPUT: 'textarea[aria-label="Chat Input"], textarea[aria-label="Group Chat Input"]',
 };
 
 /**
@@ -36,10 +38,8 @@ function findAndPlayNomiMessage(messageNode) {
     return;
   }
 
-  // If not initial load complete, auto-play disabled, or already processed, do nothing.
-  if (!initialLoadComplete || !autoPlayEnabled || messageNode.hasAttribute(PROCESSED_ATTRIBUTE)) {
-    // If it's not initial load but it's marked, we've handled it.
-    // If it IS initial load, we'll mark it later if it's not already.
+  // If auto-play disabled or already processed, do nothing.
+  if (!autoPlayEnabled || messageNode.hasAttribute(PROCESSED_ATTRIBUTE)) {
     return;
   }
 
@@ -74,49 +74,19 @@ function findAndPlayNomiMessage(messageNode) {
  * @param {MutationObserver} observer - The MutationObserver instance.
  */
 const observerCallback = (mutationsList, observer) => {
+  // Get all added nodes from all mutations
+  const allAddedNodes = [];
   for (const mutation of mutationsList) {
     if (mutation.type === 'childList') {
-      mutation.addedNodes.forEach(node => {
-        if (!initialLoadComplete) {
-          // During the initial phase, if nodes are added, mark them as processed
-          // so they are not played when initialLoadComplete becomes true.
-          if (node.nodeType === Node.ELEMENT_NODE && hasAnyClass(node, SELECTORS.MESSAGE_CONTAINER.replaceAll('.', '').split(', '))) {
-            const nomiMsgDiv = node.querySelector('div[type="Nomi"].css-1aa7664');
-            if (nomiMsgDiv) { // Only mark Nomi messages
-                node.setAttribute(PROCESSED_ATTRIBUTE, 'true');
-            }
-          }
-          // If the added node itself contains multiple messages (e.g., a wrapper div loaded)
-          if (node.nodeType === Node.ELEMENT_NODE) {
-            const potentialMessages = node.querySelectorAll(SELECTORS.NOMI_MESSAGE_CONTENT);
-            potentialMessages.forEach(nomiMsgDiv => {
-                const parentMessageNode = nomiMsgDiv.closest(SELECTORS.MESSAGE_CONTAINER);
-                if(parentMessageNode) parentMessageNode.setAttribute(PROCESSED_ATTRIBUTE, 'true');
-            });
-          }
-        } else {
-          // Initial load is complete, process normally
-          findAndPlayNomiMessage(node);
-          highlightAsteriskText(node);
-          // If the added node itself contains multiple messages (e.g., a wrapper div loaded)
-          if (node.nodeType === Node.ELEMENT_NODE) {
-            const potentialMessages = node.querySelectorAll(SELECTORS.MESSAGE_CONTAINER);
-            // Only play the last (most recent) Nomi message
-            let lastNomiMessage = null;
-            potentialMessages.forEach(potentialMsg => {
-              highlightAsteriskText(potentialMsg);
-              const nomiMsgDiv = potentialMsg.querySelector('div[type="Nomi"].css-1aa7664');
-              if (nomiMsgDiv && !potentialMsg.hasAttribute(PROCESSED_ATTRIBUTE)) {
-                lastNomiMessage = potentialMsg;
-              }
-            });
-            if (lastNomiMessage) {
-              findAndPlayNomiMessage(lastNomiMessage);
-            }
-          }
-        }
-      });
+      allAddedNodes.push(...mutation.addedNodes);
     }
+  }
+  
+  // Only process the last added node (most recent)
+  if (allAddedNodes.length > 0) {
+    const lastNode = allAddedNodes[allAddedNodes.length - 1];
+    findAndPlayNomiMessage(lastNode);
+    highlightAsteriskText(lastNode);
   }
 };
 
@@ -242,15 +212,52 @@ function removeAllHighlighting() {
   });
 }
 
+/**
+ * Waits for the chat input to appear, indicating the page is fully loaded
+ */
+function waitForChatInput() {
+  return new Promise((resolve) => {
+    const chatInput = document.querySelector(SELECTORS.CHAT_INPUT);
+    if (chatInput) {
+      setTimeout(resolve, 1000); // Give extra time for navigation
+    } else {
+      // Chat input doesn't exist yet, wait for it to appear
+      const checkForInput = () => {
+        const chatInput = document.querySelector(SELECTORS.CHAT_INPUT);
+        if (chatInput) {
+          resolve();
+        } else {
+          setTimeout(checkForInput, 100);
+        }
+      };
+      checkForInput();
+    }
+  });
+}
+
 // Main function to set up the observer
 async function initializeAutoPlayer() {
-  console.log('Nomi.ai Auto-Play: Page loaded, setting up observer.');
+  console.log('Nomi.ai Auto-Play: Initializing auto-player...');
+  
+  // Clean up previous observer if it exists
+  if (currentObserver) {
+    currentObserver.disconnect();
+  }
+  
+  // Reset state for new page
+  initialLoadComplete = false;
   
   // Load the current extension states
   await loadExtensionStates();
   
   // Add highlight styles
   addHighlightStyles();
+
+  // Wait for chat input to appear (indicates page is fully loaded)
+  await waitForChatInput();
+  
+  // Wait additional 3 seconds after chat input appears to ensure all messages are loaded
+  await new Promise(resolve => setTimeout(resolve, 2000));
 
   // --- CRITICAL: ADJUST THIS SELECTOR ---
   // Try to find the most specific, stable parent element that contains all chat messages.
@@ -261,10 +268,10 @@ async function initializeAutoPlayer() {
   let chatContainer = document.querySelector(SELECTORS.CHAT_CONTAINER); // This is a GUESS based on typical layouts. INSPECT AND ADJUST!
                                                                      // Often, it's a div that scrolls.
   if (!chatContainer || chatContainer === document.body) { // if the guess is bad or too generic
-    // Try to find a more specific parent of the first message.
-    const firstMessageExample = document.querySelector(SELECTORS.MESSAGE_CONTAINER);
-    if (firstMessageExample && firstMessageExample.parentElement) {
-      chatContainer = firstMessageExample.parentElement;
+    // Find chat container by looking at the parent of the last message
+    const allMessages = document.querySelectorAll(SELECTORS.MESSAGE_CONTAINER);
+    if (allMessages.length > 0) {
+      chatContainer = allMessages[allMessages.length - 1].parentElement;
     } else {
       chatContainer = document.body; // Fallback, less ideal
     }
@@ -272,17 +279,16 @@ async function initializeAutoPlayer() {
   console.log('Nomi.ai Auto-Play: Observing chat container:', chatContainer);
   // --- END CRITICAL SELECTOR ---
 
-  // Mark all Nomi messages already present on the page as "processed" so they aren't played.
-  const existingNomiMessages = chatContainer.querySelectorAll(SELECTORS.NOMI_MESSAGE_CONTENT);
+  // Mark ALL existing messages as processed so they aren't played
+  const allExistingMessages = chatContainer.querySelectorAll(SELECTORS.MESSAGE_CONTAINER);
   let markedCount = 0;
-  existingNomiMessages.forEach(nomiMsgDiv => {
-    const parentMessageNode = nomiMsgDiv.closest(SELECTORS.MESSAGE_CONTAINER);
-    if (parentMessageNode && !parentMessageNode.hasAttribute(PROCESSED_ATTRIBUTE)) {
-      parentMessageNode.setAttribute(PROCESSED_ATTRIBUTE, 'true');
+  allExistingMessages.forEach(messageNode => {
+    if (!messageNode.hasAttribute(PROCESSED_ATTRIBUTE)) {
+      messageNode.setAttribute(PROCESSED_ATTRIBUTE, 'true');
       markedCount++;
     }
   });
-  console.log(`Nomi.ai Auto-Play: Marked ${markedCount} existing Nomi messages as processed.`);
+  console.log(`Nomi.ai Auto-Play: Marked ${markedCount} existing messages as processed.`);
   
   // Process existing messages for highlighting if enabled
   if (highlightEnabled) {
@@ -290,25 +296,53 @@ async function initializeAutoPlayer() {
     allExistingMessages.forEach(msg => highlightAsteriskText(msg));
   }
 
-  // Create and start the observer
-  const observer = new MutationObserver(observerCallback);
-  observer.observe(chatContainer, { childList: true, subtree: true });
+  // Page is fully loaded, enable auto-play for new messages
+  initialLoadComplete = true;
+  console.log('Nomi.ai Auto-Play: Page fully loaded, now monitoring for new messages.');
 
-  // Set a timeout to consider the initial loading phase complete.
-  // Adjust this duration (in milliseconds) based on how quickly Nomi.ai typically loads its initial chat messages.
-  // Too short, and it might still play some initial messages. Too long, and it might miss early new messages.
-  const initialLoadDelay = 3000; // 3 seconds, adjust as needed
-  setTimeout(() => {
-    initialLoadComplete = true;
-    console.log(`Nomi.ai Auto-Play: Initial load considered complete after ${initialLoadDelay / 1000}s. Now monitoring for truly new messages.`);
-  }, initialLoadDelay);
+  // Create and start the observer
+  currentObserver = new MutationObserver(observerCallback);
+  currentObserver.observe(chatContainer, { childList: true, subtree: true });
+  console.log('Nomi.ai Auto-Play: New observer created and started');
 }
 
-// Wait for the window to load before initializing.
+// Track URL for navigation detection
+let lastUrl = location.href;
+
+// Initialize on page load
 if (document.readyState === 'complete' || document.readyState === 'interactive') {
     initializeAutoPlayer();
 } else {
     window.addEventListener('load', initializeAutoPlayer);
 }
 
-console.log('Nomi.ai Auto-Play content script loaded and waiting for page load.');
+// SPA Navigation Detection using MutationObserver
+const navigationObserver = new MutationObserver(() => {
+    if (location.href !== lastUrl) {
+        // Clean up current observer
+        if (currentObserver) {
+            currentObserver.disconnect();
+            currentObserver = null;
+        }
+        
+        lastUrl = location.href;
+        
+        // Reinitialize after delay
+        setTimeout(() => {
+            initializeAutoPlayer();
+        }, 500);
+    }
+});
+
+// Start monitoring for navigation changes
+navigationObserver.observe(document, {
+    subtree: true,
+    childList: true
+});
+
+// Handle back/forward navigation
+window.addEventListener('popstate', () => {
+  setTimeout(() => {
+    initializeAutoPlayer();
+  }, 500);
+});
