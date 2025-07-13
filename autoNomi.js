@@ -10,7 +10,8 @@ const HIGHLIGHT_PROCESSED_ATTRIBUTE = 'data-nomi-highlight-processed'; // Custom
  */
 function findAndPlayNomiMessage(messageNode) {
   // Ensure it's an element node and has the general message container class
-  if (messageNode.nodeType !== Node.ELEMENT_NODE || !messageNode.classList.contains('css-fda5tg')) {
+  if (messageNode.nodeType !== Node.ELEMENT_NODE ||
+    !(messageNode.classList.contains('css-fda5tg') || messageNode.classList.contains('css-1r0bmfq'))) {
     return;
   }
 
@@ -25,10 +26,10 @@ function findAndPlayNomiMessage(messageNode) {
   messageNode.setAttribute(PROCESSED_ATTRIBUTE, 'true');
 
   // Check if this message is from Nomi.
-  const nomiMessageContentDiv = messageNode.querySelector('div[type="Nomi"].css-1aa7664');
+  const nomiMessageContentDiv = messageNode.querySelector('div[type="Nomi"].css-1aa7664, div[type="Nomi"].css-s72bf4');
 
   if (nomiMessageContentDiv) {
-    const nomiMessageContainer = nomiMessageContentDiv.closest('.css-lpoi82');
+    const nomiMessageContainer = nomiMessageContentDiv.closest('.css-lpoi82, .css-1r0bmfq');
     if (nomiMessageContainer) {
       const speakButton = nomiMessageContainer.querySelector('.css-dvxtzn button[aria-label="Speak message"].eg18m7y0');
       if (speakButton) {
@@ -79,10 +80,18 @@ const observerCallback = (mutationsList, observer) => {
           // If the added node itself contains multiple messages (e.g., a wrapper div loaded)
           if (node.nodeType === Node.ELEMENT_NODE) {
             const potentialMessages = node.querySelectorAll('.css-fda5tg');
+            // Only play the last (most recent) Nomi message
+            let lastNomiMessage = null;
             potentialMessages.forEach(potentialMsg => {
-              findAndPlayNomiMessage(potentialMsg);
               highlightAsteriskText(potentialMsg);
+              const nomiMsgDiv = potentialMsg.querySelector('div[type="Nomi"].css-1aa7664');
+              if (nomiMsgDiv && !potentialMsg.hasAttribute(PROCESSED_ATTRIBUTE)) {
+                lastNomiMessage = potentialMsg;
+              }
             });
+            if (lastNomiMessage) {
+              findAndPlayNomiMessage(lastNomiMessage);
+            }
           }
         }
       });
@@ -257,7 +266,6 @@ async function initializeAutoPlayer() {
   // Process existing messages for highlighting if enabled
   if (highlightEnabled) {
     const allExistingMessages = chatContainer.querySelectorAll('.css-fda5tg');
-    debugger
     allExistingMessages.forEach(msg => highlightAsteriskText(msg));
   }
 

@@ -9,11 +9,20 @@ A Chrome browser extension that enhances your Nomi AI (nomi.ai) experience with 
 
 ## Installation
 
+### New Installation
 1. Download or clone this repository
 2. Open Chrome and navigate to `chrome://extensions/`
 3. Enable "Developer mode" in the top right corner
 4. Click "Load unpacked" and select the extension folder
 5. The extension icon will appear in your browser toolbar
+
+### Updating Existing Installation
+1. Download the latest version from GitHub
+2. Go to `chrome://extensions/`
+3. Find "Nomi Enhanced" and click the refresh/reload button
+4. Or replace the extension folder and reload
+
+**Current Version: 1.0.1** - See [CHANGELOG.md](CHANGELOG.md) for updates
 
 ## Usage
 
