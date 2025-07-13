@@ -1,0 +1,24 @@
+{
+  "manifest_version": 3,
+  "name": "Nomi Enhanced",
+  "version": "1.0",
+  "description": "Enhanced features for Nomi.ai including auto-play and text highlighting",
+  "permissions": [
+    "activeTab",
+    "scripting",
+    "storage"
+  ],
+  "host_permissions": [
+    "*://*.nomi.ai/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": ["*://*.nomi.ai/*"],
+      "js": ["autoNomi.js"]
+    }
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Nomi Enhanced Settings"
+  }
+}
