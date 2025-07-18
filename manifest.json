@@ -1,24 +1,35 @@
 {
   "manifest_version": 3,
   "name": "Nomi Enhanced",
-  "version": "1.0.1",
-  "description": "Enhanced features for Nomi.ai including auto-play and text highlighting",
+  "version": "1.1.0",
+  "description": "Enhanced features for Nomi.ai including auto-play, text highlighting, and other",
   "permissions": [
     "activeTab",
     "scripting",
-    "storage"
+    "storage",
+    "contextMenus"
   ],
   "host_permissions": [
-    "*://*.nomi.ai/*"
+    "*://*.nomi.ai/*",
+    "*://*.civitai.com/*"
   ],
+  "background": {
+    "service_worker": "background.js"
+  },
   "content_scripts": [
     {
       "matches": ["*://*.nomi.ai/*"],
-      "js": ["autoNomi.js"]
+      "js": ["themes/default.js", "themes/minimalistic.js", "themeStorage.js", "themeManager.js", "autoNomi.js", "artPageHandler.js"]
     }
   ],
   "action": {
     "default_popup": "popup.html",
     "default_title": "Nomi Enhanced Settings"
-  }
+  },
+  "web_accessible_resources": [
+    {
+      "resources": ["themes/image/*"],
+      "matches": ["*://*.nomi.ai/*"]
+    }
+  ]
 }

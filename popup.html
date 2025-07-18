@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <style>
     body {
-      width: 200px;
+      width: 280px;
       padding: 16px;
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       font-size: 14px;
@@ -67,26 +67,206 @@
       color: #666;
       margin-top: 8px;
     }
+    
+    .info {
+      font-size: 11px;
+      color: #888;
+      margin-top: 8px;
+      padding: 8px;
+      background: #f5f5f5;
+      border-radius: 4px;
+      line-height: 1.4;
+    }
+    
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid #eee;
+    }
+    
+    .header h1 {
+      margin: 0;
+      font-size: 16px;
+      font-weight: 600;
+      color: #333;
+    }
+    
+    .settings-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 4px;
+      border-radius: 4px;
+      transition: background 0.2s;
+    }
+    
+    .settings-btn:hover {
+      background: #f0f0f0;
+    }
+    
+    .settings-btn svg {
+      width: 16px;
+      height: 16px;
+      fill: #666;
+    }
+    
+    .view {
+      display: none;
+    }
+    
+    .view.active {
+      display: block;
+    }
+    
+    .back-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 14px;
+      color: #666;
+      transition: background 0.2s;
+    }
+    
+    .back-btn:hover {
+      background: #f0f0f0;
+    }
+    
+    .form-group {
+      margin-bottom: 16px;
+    }
+    
+    .form-group label {
+      display: block;
+      margin-bottom: 4px;
+      font-size: 12px;
+      font-weight: 500;
+      color: #333;
+    }
+    
+    .form-group input {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+      box-sizing: border-box;
+    }
+    
+    .form-group input:focus {
+      outline: none;
+      border-color: #2196F3;
+    }
+    
+    .form-group .help-text {
+      font-size: 11px;
+      color: #888;
+      margin-top: 4px;
+    }
+    
+    .button-group {
+      display: flex;
+      gap: 8px;
+      margin-top: 16px;
+    }
+    
+    .btn {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 4px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: background 0.2s;
+      flex: 1;
+    }
+    
+    .btn-primary {
+      background: #2196F3;
+      color: white;
+    }
+    
+    .btn-primary:hover {
+      background: #1976D2;
+    }
+    
+    .btn-secondary {
+      background: #f5f5f5;
+      color: #333;
+    }
+    
+    .btn-secondary:hover {
+      background: #e0e0e0;
+    }
   </style>
 </head>
 <body>
-  <div class="toggle-container">
-    <label class="switch">
-      <input type="checkbox" id="autoPlayToggle">
-      <span class="slider"></span>
-    </label>
-    <span>Auto-play Nomi messages</span>
+  <!-- Main View -->
+  <div id="mainView" class="view active">
+    <div class="header">
+      <h1>Nomi Enhanced</h1>
+      <button class="settings-btn" id="settingsBtn">
+        <svg viewBox="0 0 24 24">
+          <path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.07,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/>
+        </svg>
+      </button>
+    </div>
+    
+    <div class="toggle-container">
+      <label class="switch">
+        <input type="checkbox" id="autoPlayToggle">
+        <span class="slider"></span>
+      </label>
+      <span>Auto-play Nomi messages</span>
+    </div>
+    
+    <div class="toggle-container">
+      <label class="switch">
+        <input type="checkbox" id="highlightToggle">
+        <span class="slider"></span>
+      </label>
+      <span>Highlight *italic* text</span>
+    </div>
+    
+    <div class="toggle-container">
+      <label class="switch">
+        <input type="checkbox" id="imageTransferToggle">
+        <span class="slider"></span>
+      </label>
+      <span>Image Transfer to Art</span>
+    </div>
+    
+    <div class="status" id="status">Loading...</div>
+    
+    <div class="info">
+      <strong>Image Transfer:</strong> Right-click any image on the web and select "Send to Nomi Art" to automatically open the art page and upload it as a pose reference.
+    </div>
   </div>
   
-  <div class="toggle-container">
-    <label class="switch">
-      <input type="checkbox" id="highlightToggle">
-      <span class="slider"></span>
-    </label>
-    <span>Highlight *italic* text</span>
+  <!-- Settings View -->
+  <div id="settingsView" class="view">
+    <div class="header">
+      <button class="back-btn" id="backBtn">← Back</button>
+      <h1>Settings</h1>
+      <div style="width: 24px;"></div> <!-- Spacer for alignment -->
+    </div>
+    
+    <div class="form-group">
+      <label for="nomiIdInput">Nomi ID</label>
+      <input type="text" id="nomiIdInput" placeholder="Enter your Nomi ID">
+      <div class="help-text">
+        You can find your Nomi ID in the URL when viewing your Nomi's profile. For example, if the URL is "https://beta.nomi.ai/nomis/123456789/chat", your Nomi ID is "123456789".
+      </div>
+    </div>
+    
+    <div class="button-group">
+      <button class="btn btn-secondary" id="cancelBtn">Cancel</button>
+      <button class="btn btn-primary" id="saveBtn">Save</button>
+    </div>
   </div>
-  
-  <div class="status" id="status">Loading...</div>
   
   <script src="popup.js"></script>
 </body>

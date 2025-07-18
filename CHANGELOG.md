@@ -2,6 +2,11 @@
 
 All notable changes to Nomi Enhanced will be documented in this file.
 
+## [1.1.0] - 2025-07-18
+
+### Added
+- **Image Transfer to Nomi Art**: Right-click any image on the web and select "Send to Nomi Art" to automatically open the art page and upload it as a pose reference
+
 ## [1.0.2] - 2025-07-14
 
 ### Fixed

@@ -31,6 +31,10 @@ function hasAnyClass(node, classArray) {
  * @param {Node} messageNode - The DOM node that might be a message.
  */
 function findAndPlayNomiMessage(messageNode) {
+  if (!autoPlayEnabled) {
+    return;
+  }
+
   let messageContainers = SELECTORS.MESSAGE_CONTAINER.replaceAll('.', '').split(', ');
   // Ensure it's an element node and has the general message container class
   if (messageNode.nodeType !== Node.ELEMENT_NODE ||
@@ -185,6 +189,27 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     }
     
     sendResponse({ success: true });
+  } else if (message.action === 'switchTheme') {
+    // Handle theme switching
+    const themeName = message.theme;
+    console.log('Nomi.ai Auto-Play: Theme switch received, switching to', themeName);
+    
+    // Use the theme manager to switch themes
+    if (typeof switchTheme === 'function') {
+      switchTheme(themeName).then(() => {
+        console.log('Theme switched successfully to:', themeName);
+        sendResponse({ success: true });
+      }).catch(error => {
+        console.error('Error switching theme:', error);
+        sendResponse({ success: false, error: error.message });
+      });
+    } else {
+      console.error('Theme manager not available');
+      sendResponse({ success: false, error: 'Theme manager not available' });
+    }
+    
+    // Return true to indicate we will send a response asynchronously
+    return true;
   }
 });
 
