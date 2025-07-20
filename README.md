@@ -7,6 +7,7 @@ A Chrome browser extension that enhances your Nomi AI (nomi.ai) experience with 
 - **Automatic Voice Playback**: Automatically plays new Nomi messages as they arrive
 - **Text Highlighting**: Highlights text enclosed in asterisks \*like this\* with special formatting
 - **Image Transfer to Nomi Art**: Right-click any image on the web and select "Send to Nomi Art" to automatically open the art page and upload it as a pose reference
+- **Theme System**: Minimalistic theme
 
 ## Installation
 
@@ -23,7 +24,7 @@ A Chrome browser extension that enhances your Nomi AI (nomi.ai) experience with 
 3. Find "Nomi Enhanced" and click the refresh/reload button
 4. Or replace the extension folder and reload
 
-**Current Version: 1.1.0** - See [CHANGELOG.md](CHANGELOG.md) for updates
+**Current Version: 1.2.0** - See [CHANGELOG.md](CHANGELOG.md) for updates
 
 ## Usage
 
@@ -31,6 +32,7 @@ A Chrome browser extension that enhances your Nomi AI (nomi.ai) experience with 
 1. Navigate to [nomi.ai](https://nomi.ai) and open a chat with your Nomi
 2. Click the extension icon in your browser toolbar to open the settings popup
 3. Use the switches to enable/disable:
+   - **Interface Theme**: Choose between Default and Minimalistic themes
    - **Auto-play Nomi messages**: Automatically plays voice for new messages
    - **Highlight \*this message\* **: Highlights text enclosed in asterisks
    - **Image Transfer to Art**: Enables right-click image transfer functionality

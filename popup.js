@@ -2,7 +2,16 @@ document.addEventListener('DOMContentLoaded', async () => {
   const autoPlayToggle = document.getElementById('autoPlayToggle');
   const highlightToggle = document.getElementById('highlightToggle');
   const imageTransferToggle = document.getElementById('imageTransferToggle');
+  const themeSelect = document.getElementById('themeSelect');
+  const themePreview = document.getElementById('themePreview');
   const status = document.getElementById('status');
+  const themeStatus = document.getElementById('themeStatus');
+  
+  // Theme preview descriptions
+  const themeDescriptions = {
+    default: 'Original Nomi.ai interface with all features visible',
+    minimalistic: 'Clean, distraction-free interface with hidden sidebar and navigation'
+  };
   
   // View switching elements
   const mainView = document.getElementById('mainView');
@@ -29,6 +38,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     nomiIdInput.value = nomiId;
     originalNomiId = nomiId;
     updateStatus(autoPlayEnabled, highlightEnabled, imageTransferEnabled);
+    
+    // Load theme state
+    await loadThemeState();
   } catch (error) {
     console.error('Error loading state:', error);
     status.textContent = 'Error loading settings';
@@ -47,6 +59,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Handle image transfer toggle changes
   imageTransferToggle.addEventListener('change', async () => {
     await handleToggleChange('imageTransferEnabled', 'toggleImageTransfer', imageTransferToggle);
+  });
+  
+  // Handle theme selection changes
+  themeSelect.addEventListener('change', async () => {
+    await handleThemeChange(themeSelect.value);
   });
   
   // View switching handlers
@@ -150,5 +167,71 @@ document.addEventListener('DOMContentLoaded', async () => {
       console.error('Error saving Nomi ID:', error);
       alert('Error saving settings. Please try again.');
     }
+  }
+
+  async function loadThemeState() {
+    try {
+      // Load theme from chrome storage sync (used by theme system)
+      const result = await chrome.storage.sync.get('nomi_theme_preferences');
+      const themeConfig = result.nomi_theme_preferences;
+      
+      let currentTheme = 'default';
+      if (themeConfig && themeConfig.currentTheme) {
+        currentTheme = themeConfig.currentTheme;
+      }
+      
+      themeSelect.value = currentTheme;
+      updateThemePreview(currentTheme);
+      updateThemeStatus(currentTheme);
+    } catch (error) {
+      console.error('Error loading theme state:', error);
+      themeStatus.textContent = 'Theme: Error loading';
+    }
+  }
+  
+  async function handleThemeChange(selectedTheme) {
+    try {
+      // Update theme preview immediately
+      updateThemePreview(selectedTheme);
+      
+      // Notify content script to switch theme
+      const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+      if (tab && tab.url && tab.url.includes('nomi.ai')) {
+        await chrome.tabs.sendMessage(tab.id, { 
+          action: 'switchTheme', 
+          theme: selectedTheme 
+        });
+        
+        updateThemeStatus(selectedTheme);
+      } else {
+        // If not on nomi.ai page, just update the storage
+        await chrome.storage.sync.get('nomi_theme_preferences').then(async (result) => {
+          const config = result.nomi_theme_preferences || {
+            currentTheme: 'default',
+            themes: {
+              default: { name: 'Default', enabled: false },
+              minimalistic: { name: 'Minimalistic', enabled: false }
+            }
+          };
+          
+          config.currentTheme = selectedTheme;
+          await chrome.storage.sync.set({ nomi_theme_preferences: config });
+          updateThemeStatus(selectedTheme);
+        });
+      }
+    } catch (error) {
+      console.error('Error switching theme:', error);
+      themeStatus.textContent = 'Theme: Error switching';
+    }
+  }
+  
+  function updateThemePreview(theme) {
+    const description = themeDescriptions[theme] || 'Unknown theme';
+    themePreview.textContent = description;
+  }
+  
+  function updateThemeStatus(theme) {
+    const themeName = theme === 'default' ? 'Default' : 'Minimalistic';
+    themeStatus.textContent = `Theme: ${themeName}`;
   }
 });

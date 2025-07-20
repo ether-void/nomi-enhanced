@@ -5,14 +5,8 @@ let currentObserver = null; // Track current observer to clean up
 const PROCESSED_ATTRIBUTE = 'data-nomi-autoplay-processed'; // Custom attribute to mark processed messages
 const HIGHLIGHT_PROCESSED_ATTRIBUTE = 'data-nomi-highlight-processed'; // Custom attribute to mark highlight processed messages
 
-const SELECTORS = {
-  MESSAGE_CONTAINER: '.css-fda5tg, .css-1r0bmfq',
-  NOMI_MESSAGE_CONTENT: '.css-fda5tg div[type="Nomi"].css-1aa7664, .css-1r0bmfq div[type="Nomi"].css-s72bf4',
-  NOMI_MESSAGE_WRAPPER: '.css-lpoi82, .css-1glxx1x',
-  SPEAK_BUTTON: '.css-dvxtzn button[aria-label="Speak message"].eg18m7y0',
-  CHAT_CONTAINER: 'main > div > div > div',
-  CHAT_INPUT: 'textarea[aria-label="Chat Input"], textarea[aria-label="Group Chat Input"]',
-};
+// CSS selectors are now loaded from cssConstants.js
+// SELECTORS object is available globally from cssConstants.js
 
 /**
  * Checks if a node has any of the specified classes.

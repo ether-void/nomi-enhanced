@@ -2,6 +2,11 @@
 
 All notable changes to Nomi Enhanced will be documented in this file.
 
+## [1.2.0] - 2025-07-20
+
+### Added
+- **Theme System**: Minimalistic Theme
+
 ## [1.1.0] - 2025-07-18
 
 ### Added
