@@ -201,6 +201,46 @@
     .btn-secondary:hover {
       background: #e0e0e0;
     }
+    
+    .theme-selector {
+      margin-bottom: 12px;
+    }
+    
+    .theme-selector label {
+      display: block;
+      margin-bottom: 4px;
+      font-size: 12px;
+      font-weight: 500;
+      color: #333;
+    }
+    
+    .theme-selector select {
+      width: 100%;
+      padding: 8px 12px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+      background: white;
+      color: #333;
+      cursor: pointer;
+      box-sizing: border-box;
+    }
+    
+    .theme-selector select:focus {
+      outline: none;
+      border-color: #9610FF;
+      box-shadow: 0 0 0 2px rgba(150, 16, 255, 0.2);
+    }
+    
+    .theme-preview {
+      margin-top: 8px;
+      padding: 8px;
+      background: #f8f9fa;
+      border-radius: 4px;
+      font-size: 11px;
+      color: #666;
+      border-left: 3px solid #9610FF;
+    }
   </style>
 </head>
 <body>
@@ -215,6 +255,17 @@
       </button>
     </div>
     
+    <div class="theme-selector">
+      <label for="themeSelect">Interface Theme</label>
+      <select id="themeSelect">
+        <option value="default">Default</option>
+        <option value="minimalistic">Minimalistic</option>
+      </select>
+      <div class="theme-preview" id="themePreview">
+        Original Nomi.ai interface with all features visible
+      </div>
+    </div>
+
     <div class="toggle-container">
       <label class="switch">
         <input type="checkbox" id="autoPlayToggle">
@@ -241,6 +292,10 @@
     
     <div class="status" id="status">Loading...</div>
     
+    <div class="status" id="themeStatus" style="font-size: 11px; color: #9610FF; margin-top: 4px;">
+      Theme: Loading...
+    </div>
+
     <div class="info">
       <strong>Image Transfer:</strong> Right-click any image on the web and select "Send to Nomi Art" to automatically open the art page and upload it as a pose reference.
     </div>
