@@ -13,6 +13,8 @@ class GroupChatProfileManager {
     this.isGroupChat = false;
     this.originalVisibility = new Map();
     this.initialized = false;
+    this.nomiImageMap = new Map(); // Map Nomi ID to image URL
+    this.dynamicProfiles = new Set(); // Track dynamically created profile elements
   }
 
   /**
@@ -36,6 +38,8 @@ class GroupChatProfileManager {
     this.isGroupChat = this.detectGroupChat();
     
     if (this.isGroupChat) {
+      // Fetch group chat data to get Nomi image mappings
+      await this.fetchGroupChatData();
       this.buildProfileMap();
     } else {
       console.log('GroupChatProfileManager: Not in group chat, manager inactive');
@@ -66,6 +70,45 @@ class GroupChatProfileManager {
         checkForInput();
       }
     });
+  }
+  
+  /**
+   * Fetch group chat data to get Nomi image mappings
+   */
+  async fetchGroupChatData() {
+    try {
+      // Extract group chat ID from URL
+      const urlMatch = window.location.href.match(/\/group-chats\/([^\/\?]+)/);
+      if (!urlMatch) {
+        console.log('GroupChatProfileManager: Could not extract group chat ID from URL');
+        return;
+      }
+      
+      const groupChatId = urlMatch[1];
+      const apiUrl = `https://beta.nomi.ai/api/group-chats/${groupChatId}?v=1`;
+      
+      const response = await fetch(apiUrl);
+      if (!response.ok) {
+        console.log('GroupChatProfileManager: Failed to fetch group chat data:', response.status);
+        return;
+      }
+      
+      const data = await response.json();
+      
+      // Build Nomi ID to image URL mapping
+      if (data.nomis && Array.isArray(data.nomis)) {
+        data.nomis.forEach(nomi => {
+          if (nomi.id && nomi.pictureImageId) {
+            const imageUrl = `https://beta.nomi.ai/api/nomis/${nomi.id}/images/${nomi.pictureImageId}.webp`;
+            this.nomiImageMap.set(nomi.id.toString(), imageUrl);
+          }
+        });
+        
+        console.log(`GroupChatProfileManager: Mapped ${this.nomiImageMap.size} Nomi image URLs`);
+      }
+    } catch (error) {
+      console.log('GroupChatProfileManager: Error fetching group chat data:', error);
+    }
   }
 
   
@@ -164,6 +207,71 @@ class GroupChatProfileManager {
         this.originalVisibility.set(profile, originalDisplay);
       }
     });
+    
+    // Check for Nomis from buttons that don't have profile pictures yet
+    this.createMissingProfileElements();
+  }
+  
+  /**
+   * Create profile elements for Nomis that don't have existing profile pictures
+   */
+  createMissingProfileElements() {
+    // Get all Nomi buttons to find all available Nomis
+    const nomiButtons = document.querySelectorAll('.css-1otg6ux button');
+    const profileContainer = document.querySelector('.css-1c0usqt.exd19tt2');
+    const profileGrid = profileContainer?.querySelector('.css-1j7y90h.e10yhkdj0');
+    
+    if (!profileContainer || !profileGrid) return;
+    
+    nomiButtons.forEach((button) => {
+      const nomiId = this.extractNomiIdFromElement(button);
+      if (nomiId && !this.profileMap.has(nomiId)) {
+        // Create a new profile element for this Nomi
+        const profileElement = this.createProfileElement(nomiId);
+        if (profileElement) {
+          // Add to the profile grid but keep hidden initially
+          profileElement.style.display = 'none';
+          profileGrid.appendChild(profileElement);
+          
+          // Add to our map and track as dynamic
+          this.profileMap.set(nomiId, profileElement);
+          this.originalVisibility.set(profileElement, 'none'); // Originally hidden
+          this.dynamicProfiles.add(profileElement);
+        }
+      }
+    });
+  }
+  
+  /**
+   * Create a profile element for a Nomi ID
+   */
+  createProfileElement(nomiId) {
+    // Use the stored image URL from API data
+    const profileImageUrl = this.nomiImageMap.get(nomiId.toString());
+    
+    if (!profileImageUrl) {
+      return null; // No URL available, skip creating this profile
+    }
+    
+    // Create a div element similar to existing profile pictures
+    const profileElement = document.createElement('div');
+    profileElement.setAttribute('height', '210');
+    profileElement.style.width = '210px';
+    profileElement.style.height = '210px';
+    profileElement.style.backgroundImage = `url("${profileImageUrl}")`;
+    profileElement.style.backgroundSize = 'cover';
+    profileElement.style.backgroundPosition = 'center';
+    profileElement.style.backgroundRepeat = 'no-repeat';
+    profileElement.style.borderRadius = '8px';
+    profileElement.style.flexShrink = '0';
+    
+    // Add classes to match existing profile pictures if possible
+    const existingProfile = document.querySelector('.css-1c0usqt.exd19tt2 [height]');
+    if (existingProfile) {
+      profileElement.className = existingProfile.className;
+    }
+    
+    return profileElement;
   }
   
   /**
@@ -235,8 +343,7 @@ class GroupChatProfileManager {
     allProfiles.forEach((profile) => {
       if (profile === targetProfile) {
         // Show the target profile and expand it to fill the entire container
-        const originalDisplay = this.originalVisibility.get(profile) || '';
-        profile.style.display = originalDisplay;
+        profile.style.display = 'block'; // Force show even if it was dynamic/hidden
         profile.style.opacity = '1';
         profile.style.flex = '1';
         profile.style.width = '100%';
@@ -297,6 +404,11 @@ class GroupChatProfileManager {
       profileGrid.style.width = '';
       profileGrid.style.height = '';
     }
+    
+    // Hide dynamically created profiles (don't remove them)
+    this.dynamicProfiles.forEach(profile => {
+      profile.style.display = 'none';
+    });
     
     this.activeNomi = null;
   }
