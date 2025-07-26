@@ -13,7 +13,8 @@ const MESSAGE_SELECTORS = {
   USER_MESSAGE_TYPE: 'div[type="User"]',
   SPEAK_BUTTON: '.css-dvxtzn button[aria-label="Speak message"].eg18m7y0',
   SPEAK_BUTTON_SIMPLE: 'button[aria-label="Speak message"]',
-  DATE_INDICATOR: '.css-ygnlmt.e1rfoea80'
+  DATE_INDICATOR: '.css-ygnlmt.e1rfoea80',
+  NOMI_NAME_ELEMENT: '.css-zhge4h'
 };
 
 // Layout and navigation selectors
@@ -68,6 +69,15 @@ const SCROLLBAR_SELECTORS = {
   SCROLLBAR_THUMB_HOVER: '::-webkit-scrollbar-thumb:hover'
 };
 
+// Group chat profile selectors
+const GROUP_CHAT_SELECTORS = {
+  PROFILE_SIDEBAR: '.css-1ruxp1v.exd19tt0',
+  PROFILE_CONTAINER: '.css-1c0usqt.exd19tt2',
+  PROFILE_GRID: '.css-1j7y90h.e10yhkdj0',
+  PROFILE_PICTURE: '.css-1c0usqt.exd19tt2 [height="210"]',
+  NOMI_NAME_ELEMENT: '.css-zhge4h'
+};
+
 // Theme-specific selectors
 const THEME_SELECTORS = {
   HIGHLIGHT_TEXT: '.nomi-highlight-text',
@@ -84,6 +94,7 @@ const CSS_SELECTORS = {
   IMAGE: IMAGE_MESSAGE_SELECTORS,
   INTERACTION: INTERACTION_SELECTORS,
   SCROLLBAR: SCROLLBAR_SELECTORS,
+  GROUP_CHAT: GROUP_CHAT_SELECTORS,
   THEME: THEME_SELECTORS
 };
 

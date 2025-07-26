@@ -21,6 +21,70 @@ function hasAnyClass(node, classArray) {
 
 
 /**
+ * Extracts the Nomi name from a message node using multiple fallback methods.
+ * @param {Node} messageNode - The DOM node containing the message.
+ * @returns {string|null} - The extracted Nomi name or null if not found.
+ */
+function extractNomiNameFromMessage(messageNode) {
+  console.log('Nomi.ai Auto-Play: Attempting to extract Nomi name from:', messageNode);
+  
+  // Method 1: Direct selector (most reliable)
+  const nameElement = messageNode.querySelector('p.css-zhge4h');
+  if (nameElement && nameElement.textContent.trim()) {
+    const name = nameElement.textContent.trim();
+    console.log('Nomi.ai Auto-Play: Found Nomi name via direct selector:', name);
+    return name;
+  }
+  
+  // Method 2: Search within message wrapper
+  const messageWrapper = messageNode.querySelector('.css-1glxx1x');
+  if (messageWrapper) {
+    const nameElement = messageWrapper.querySelector('p.css-zhge4h');
+    if (nameElement && nameElement.textContent.trim()) {
+      const name = nameElement.textContent.trim();
+      console.log('Nomi.ai Auto-Play: Found Nomi name via message wrapper:', name);
+      return name;
+    }
+  }
+  
+  // Method 3: DOM traversal fallback
+  const nomiMessageDiv = messageNode.querySelector('div[type="Nomi"]');
+  if (nomiMessageDiv) {
+    console.log('Nomi.ai Auto-Play: Found Nomi message div, searching for name...');
+    let current = nomiMessageDiv.parentElement;
+    while (current && current !== messageNode) {
+      const nameEl = current.querySelector('p.css-zhge4h');
+      if (nameEl && nameEl.textContent.trim()) {
+        const name = nameEl.textContent.trim();
+        console.log('Nomi.ai Auto-Play: Found Nomi name via DOM traversal:', name);
+        return name;
+      }
+      current = current.previousElementSibling;
+    }
+  }
+  
+  console.log('Nomi.ai Auto-Play: Could not extract Nomi name from message');
+  return null; // Could not determine Nomi name
+}
+
+/**
+ * Detects and processes Nomi messages for group chat profile management.
+ * @param {Node} messageNode - The DOM node that might be a message.
+ */
+function detectNomiMessage(messageNode) {
+  // Only process Nomi messages
+  const nomiMessageContentDiv = messageNode.querySelector(SELECTORS.NOMI_MESSAGE_CONTENT);
+  if (!nomiMessageContentDiv) return;
+  
+  // Extract which Nomi sent the message
+  const nomiName = extractNomiNameFromMessage(messageNode);
+  
+  if (nomiName) {
+    console.log('Nomi.ai Auto-Play: Message from Nomi:', nomiName);
+  }
+}
+
+/**
  * Finds and plays a Nomi message if it's new and unprocessed.
  * @param {Node} messageNode - The DOM node that might be a message.
  */
@@ -83,8 +147,13 @@ const observerCallback = (mutationsList, observer) => {
   // Only process the last added node (most recent)
   if (allAddedNodes.length > 0) {
     const lastNode = allAddedNodes[allAddedNodes.length - 1];
+    
+    // Existing functionality (unchanged)
     findAndPlayNomiMessage(lastNode);
     highlightAsteriskText(lastNode);
+    
+    // NEW: Detect which Nomi sent message
+    detectNomiMessage(lastNode);
   }
 };
 
@@ -207,6 +276,43 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   }
 });
 
+/**
+ * Monitor voice playback by listening to speak button clicks
+ */
+function monitorVoicePlayback() {
+  // Monitor all speak button clicks
+  document.addEventListener('click', (e) => {
+    const speakButton = e.target.closest('button[aria-label="Speak message"]');
+    if (speakButton) {
+      const messageContainer = speakButton.closest('.css-1r0bmfq, .css-fda5tg');
+      if (messageContainer) {
+        const nomiName = extractNomiNameFromMessage(messageContainer);
+        
+        if (nomiName) {
+          console.log('Nomi.ai Auto-Play: Voice started for', nomiName);
+          
+          // Step 3: Show profile when voice message is played
+          if (window.groupChatProfileManager && window.groupChatProfileManager.isGroupChat) {
+            const nomiId = window.groupChatProfileManager.extractNomiIdFromElement(messageContainer);
+            if (nomiId) {
+              window.groupChatProfileManager.showOnlyProfile(nomiId);
+            }
+          }
+        }
+      }
+    }
+  });
+}
+
+
+/**
+ * Initialize voice monitoring when the page is ready
+ */
+function initializeVoiceMonitoring() {
+  console.log('Nomi.ai Auto-Play: Initializing voice monitoring...');
+  monitorVoicePlayback();
+}
+
 // Helper functions for highlighting management
 function processExistingMessagesForHighlighting() {
   const allMessages = document.querySelectorAll(SELECTORS.MESSAGE_CONTAINER);
@@ -254,6 +360,97 @@ function waitForChatInput() {
   });
 }
 
+/**
+ * Check active Nomi from selector buttons
+ */
+function checkActiveNomiFromButtons() {
+  if (!window.groupChatProfileManager || !window.groupChatProfileManager.isGroupChat) return;
+  
+  const nomiButtons = document.querySelectorAll('.css-1otg6ux button');
+  if (nomiButtons.length === 0) return;
+  
+  let enabledButtons = [];
+  
+  nomiButtons.forEach((button, index) => {
+    const innerDiv = button.querySelector('div');
+    const isDisabled = innerDiv && innerDiv.hasAttribute('disabled');
+    
+    if (!isDisabled) {
+      enabledButtons.push(button);
+    }
+  });
+  
+  if (enabledButtons.length === 1) {
+    // Exactly one button enabled = that Nomi is active
+    const activeButton = enabledButtons[0];
+    const nomiId = window.groupChatProfileManager.extractNomiIdFromElement(activeButton);
+    if (nomiId) {
+      window.groupChatProfileManager.showOnlyProfile(nomiId);
+    }
+  } else if (enabledButtons.length === nomiButtons.length) {
+    // All buttons enabled = normal state, show all profiles
+    window.groupChatProfileManager.showAllProfiles();
+  }
+}
+
+/**
+ * Initialize Nomi button monitoring for dynamic profiles
+ */
+function initializeNomiButtonMonitoring() {
+  // Function to set up button monitoring once container is found
+  const setupButtonMonitoring = (buttonContainer) => {
+    // Initial check
+    checkActiveNomiFromButtons();
+    
+    // Set up dedicated observer for button changes
+    const buttonObserver = new MutationObserver(() => {
+      checkActiveNomiFromButtons();
+    });
+    
+    buttonObserver.observe(buttonContainer, {
+      attributes: true,
+      attributeFilter: ['disabled', 'class'],
+      subtree: true
+    });
+  };
+  
+  // Try to find button container immediately
+  const buttonContainer = document.querySelector('.css-1otg6ux');
+  if (buttonContainer) {
+    setupButtonMonitoring(buttonContainer);
+  } else {
+    // Wait for button container to appear
+    const containerObserver = new MutationObserver((mutations) => {
+      for (const mutation of mutations) {
+        for (const addedNode of mutation.addedNodes) {
+          if (addedNode.nodeType === Node.ELEMENT_NODE) {
+            // Check if this node is the button container
+            if (addedNode.classList && addedNode.classList.contains('css-1otg6ux')) {
+              containerObserver.disconnect();
+              setupButtonMonitoring(addedNode);
+              return;
+            }
+            
+            // Check if this node contains the button container
+            const buttonContainer = addedNode.querySelector && addedNode.querySelector('.css-1otg6ux');
+            if (buttonContainer) {
+              containerObserver.disconnect();
+              setupButtonMonitoring(buttonContainer);
+              return;
+            }
+          }
+        }
+      }
+    });
+    
+    // Start observing for the button container
+    containerObserver.observe(document.body, {
+      childList: true,
+      subtree: true
+    });
+  }
+}
+
 // Main function to set up the observer
 async function initializeAutoPlayer() {
   console.log('Nomi.ai Auto-Play: Initializing auto-player...');
@@ -271,6 +468,12 @@ async function initializeAutoPlayer() {
   
   // Add highlight styles
   addHighlightStyles();
+  
+  // Initialize voice monitoring
+  initializeVoiceMonitoring();
+  
+  // Initialize Nomi button monitoring for dynamic profiles
+  initializeNomiButtonMonitoring();
 
   // Wait for chat input to appear (indicates page is fully loaded)
   await waitForChatInput();

@@ -2,6 +2,11 @@
 
 All notable changes to Nomi Enhanced will be documented in this file.
 
+## [1.3.0] - 2025-07-26
+
+### Added
+- **Dynamic Group Chat Profiles**: Shows only the active Nomi's profile picture when they're speaking or sending messages in group chats (disabled by default)
+
 ## [1.2.0] - 2025-07-20
 
 ### Added
