@@ -389,7 +389,7 @@ function checkActiveNomiFromButtons() {
     }
   } else if (enabledButtons.length === nomiButtons.length) {
     // All buttons enabled = normal state, show all profiles
-    window.groupChatProfileManager.showAllProfiles();
+    // window.groupChatProfileManager.showAllProfiles();
   }
 }
 
