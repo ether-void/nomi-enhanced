@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Nomi Enhanced",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "description": "Enhanced features for Nomi.ai including auto-play, text highlighting, and other",
   "permissions": [
     "activeTab",
@@ -26,6 +26,8 @@
         "themeStorage.js",
         "themeManager.js",
         "groupChatProfileManager.js",
+        "backgroundSystem.js",
+        "commandSystem.js",
         "autoNomi.js",
         "artPageHandler.js"
       ]
@@ -37,7 +39,7 @@
   },
   "web_accessible_resources": [
     {
-      "resources": ["themes/image/*"],
+      "resources": ["themes/image/*", "backgrounds/*/*"],
       "matches": ["*://*.nomi.ai/*"]
     }
   ]

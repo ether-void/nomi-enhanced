@@ -9,6 +9,8 @@ A Chrome browser extension that enhances your Nomi AI (nomi.ai) experience with 
 - **Image Transfer to Nomi Art**: Right-click any image on the web and select "Send to Nomi Art" to automatically open the art page and upload it as a pose reference
 - **Dynamic Group Chat Profiles**: Shows only the active Nomi's profile picture in group chats (disabled by default)
 - **Theme System**: Minimalistic theme
+- **Dynamic Backgrounds**: Custom background system with day/night switching and brightness control
+- **Command System**: Powerful `/command` interface for quick access to all features
 
 ## Installation
 
@@ -25,7 +27,7 @@ A Chrome browser extension that enhances your Nomi AI (nomi.ai) experience with 
 3. Find "Nomi Enhanced" and click the refresh/reload button
 4. Or replace the extension folder and reload
 
-**Current Version: 1.3.0** - See [CHANGELOG.md](CHANGELOG.md) for updates
+**Current Version: 1.4.0** - See [CHANGELOG.md](CHANGELOG.md) for updates
 
 ## Usage
 
@@ -46,3 +48,32 @@ A Chrome browser extension that enhances your Nomi AI (nomi.ai) experience with 
    - Open your Nomi's art generation page
    - Upload the image as a pose reference
    - If from CivitAI, automatically paste the prompt text
+
+## Command System
+
+The extension now includes a powerful command system accessible by typing `/` in the chat input.
+
+### Available Commands
+
+**Core Commands:**
+- `/toggle` - Toggle auto-play on/off
+- `/highlight` - Toggle text highlighting
+- `/toggle_messages` - Hide/show all messages for clean backgrounds
+- `/status` - Show current extension status
+- `/help` - Display all available commands
+
+**Background Commands:**
+- `/{location}` - Switch to background (auto-generated from your folders)
+- `/backgrounds` - List all available backgrounds
+- `/reset` - Reset to default background
+- `/time day|night` - Override time for current background
+- `/brightness <0-100>` - Set background brightness (0=dark, 100=normal)
+
+**Command Features:**
+- Smart autocomplete dropdown with descriptions
+- Tab completion for quick command entry
+- Commands are automatically generated based on your background folders
+
+## Dynamic Backgrounds
+
+For complete background setup instructions and commands, see [backgrounds/README.md](backgrounds/README.md).

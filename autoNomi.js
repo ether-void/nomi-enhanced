@@ -5,6 +5,12 @@ let currentObserver = null; // Track current observer to clean up
 const PROCESSED_ATTRIBUTE = 'data-nomi-autoplay-processed'; // Custom attribute to mark processed messages
 const HIGHLIGHT_PROCESSED_ATTRIBUTE = 'data-nomi-highlight-processed'; // Custom attribute to mark highlight processed messages
 
+// Expose variables globally for command system
+window.autoPlayEnabled = autoPlayEnabled;
+window.highlightEnabled = highlightEnabled;
+window.messagesHidden = false;
+window.backgroundBrightness = 100; // Default 100%
+
 // CSS selectors are now loaded from cssConstants.js
 // SELECTORS object is available globally from cssConstants.js
 
@@ -89,7 +95,7 @@ function detectNomiMessage(messageNode) {
  * @param {Node} messageNode - The DOM node that might be a message.
  */
 function findAndPlayNomiMessage(messageNode) {
-  if (!autoPlayEnabled) {
+  if (!window.autoPlayEnabled) {
     return;
   }
 
@@ -101,7 +107,7 @@ function findAndPlayNomiMessage(messageNode) {
   }
 
   // If auto-play disabled or already processed, do nothing.
-  if (!autoPlayEnabled || messageNode.hasAttribute(PROCESSED_ATTRIBUTE)) {
+  if (!window.autoPlayEnabled || messageNode.hasAttribute(PROCESSED_ATTRIBUTE)) {
     return;
   }
 
@@ -178,7 +184,7 @@ function addHighlightStyles() {
 // Function to highlight text enclosed in asterisks
 function highlightAsteriskText(messageNode) {
   // Ensure it's an element node before proceeding
-  if (!highlightEnabled || messageNode.nodeType !== Node.ELEMENT_NODE || messageNode.hasAttribute(HIGHLIGHT_PROCESSED_ATTRIBUTE)) {
+  if (!window.highlightEnabled || messageNode.nodeType !== Node.ELEMENT_NODE || messageNode.hasAttribute(HIGHLIGHT_PROCESSED_ATTRIBUTE)) {
     return;
   }
   
@@ -222,28 +228,36 @@ function highlightAsteriskText(messageNode) {
 // Load extension states from storage
 async function loadExtensionStates() {
   try {
-    const result = await chrome.storage.local.get(['autoPlayEnabled', 'highlightEnabled']);
-    autoPlayEnabled = result.autoPlayEnabled !== false; // Default to true
-    highlightEnabled = result.highlightEnabled !== false; // Default to true
-    console.log('Nomi.ai Auto-Play: Loaded states - auto-play:', autoPlayEnabled ? 'enabled' : 'disabled', 'highlight:', highlightEnabled ? 'enabled' : 'disabled');
+    const result = await chrome.storage.local.get(['autoPlayEnabled', 'highlightEnabled', 'backgroundBrightness']);
+    window.autoPlayEnabled = result.autoPlayEnabled !== false; // Default to true
+    window.highlightEnabled = result.highlightEnabled !== false; // Default to true
+    window.backgroundBrightness = result.backgroundBrightness || 100; // Default to 100%
+    
+    // Keep local variables in sync for backwards compatibility
+    autoPlayEnabled = window.autoPlayEnabled;
+    highlightEnabled = window.highlightEnabled;
   } catch (error) {
     console.log('Nomi.ai Auto-Play: Could not load states, defaulting to enabled');
-    autoPlayEnabled = true;
-    highlightEnabled = true;
+    window.autoPlayEnabled = true;
+    window.highlightEnabled = true;
+    autoPlayEnabled = window.autoPlayEnabled;
+    highlightEnabled = window.highlightEnabled;
   }
 }
 
 // Listen for toggle messages from popup
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === 'toggleAutoPlay') {
-    autoPlayEnabled = message.enabled;
-    console.log('Nomi.ai Auto-Play: Toggle received, auto-play is now', autoPlayEnabled ? 'enabled' : 'disabled');
+    window.autoPlayEnabled = message.enabled;
+    autoPlayEnabled = window.autoPlayEnabled;
+    console.log('Nomi.ai Auto-Play: Toggle received, auto-play is now', window.autoPlayEnabled ? 'enabled' : 'disabled');
     sendResponse({ success: true });
   } else if (message.action === 'toggleHighlight') {
-    highlightEnabled = message.enabled;
-    console.log('Nomi.ai Auto-Play: Highlight toggle received, highlighting is now', highlightEnabled ? 'enabled' : 'disabled');
+    window.highlightEnabled = message.enabled;
+    highlightEnabled = window.highlightEnabled;
+    console.log('Nomi.ai Auto-Play: Highlight toggle received, highlighting is now', window.highlightEnabled ? 'enabled' : 'disabled');
     
-    if (highlightEnabled) {
+    if (window.highlightEnabled) {
       // Re-process all existing messages for highlighting
       processExistingMessagesForHighlighting();
     } else {
@@ -312,6 +326,7 @@ function initializeVoiceMonitoring() {
   console.log('Nomi.ai Auto-Play: Initializing voice monitoring...');
   monitorVoicePlayback();
 }
+
 
 // Helper functions for highlighting management
 function processExistingMessagesForHighlighting() {
@@ -472,6 +487,16 @@ async function initializeAutoPlayer() {
   // Initialize voice monitoring
   initializeVoiceMonitoring();
   
+  // Initialize command system
+  if (window.commandSystem) {
+    window.commandSystem.initializeCommandSystem();
+  }
+  
+  // Initialize background system
+  if (window.backgroundSystem) {
+    await window.backgroundSystem.initializeBackgroundSystem();
+  }
+  
   // Initialize Nomi button monitoring for dynamic profiles
   initializeNomiButtonMonitoring();
 
@@ -513,7 +538,7 @@ async function initializeAutoPlayer() {
   console.log(`Nomi.ai Auto-Play: Marked ${markedCount} existing messages as processed.`);
   
   // Process existing messages for highlighting if enabled
-  if (highlightEnabled) {
+  if (window.highlightEnabled) {
     const allExistingMessages = chatContainer.querySelectorAll(SELECTORS.MESSAGE_CONTAINER);
     allExistingMessages.forEach(msg => highlightAsteriskText(msg));
   }
@@ -568,3 +593,7 @@ window.addEventListener('popstate', () => {
     initializeAutoPlayer();
   }, 500);
 });
+
+// Expose helper functions globally for command system
+window.processExistingMessagesForHighlighting = processExistingMessagesForHighlighting;
+window.removeAllHighlighting = removeAllHighlighting;

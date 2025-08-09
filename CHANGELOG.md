@@ -2,6 +2,13 @@
 
 All notable changes to Nomi Enhanced will be documented in this file.
 
+## [1.4.0] - 2025-08-08
+
+### Added
+- **Command System**: `/command` interface for extension control with smart autocomplete
+- **Dynamic Background System**: Custom backgrounds with day/night switching and brightness control
+- **Interface Control**: `/toggle_messages` command to hide/show all messages
+
 ## [1.3.0] - 2025-07-26
 
 ### Added

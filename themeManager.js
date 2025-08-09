@@ -149,12 +149,26 @@ async function loadMinimalisticThemeCSS() {
     const themeConfig = getMinimalisticTheme();
     console.log('Loaded minimalistic theme config:', themeConfig);
     
-    // Replace placeholder with actual image URL
+    // Check if there's an active background from the background system
+    const hasActiveBackground = document.getElementById('nomi-background-style') !== null;
+    
     let cssContent = themeConfig.styles || '';
     if (cssContent.includes('BACKGROUND_IMAGE_URL_PLACEHOLDER')) {
-      const imageUrl = chrome.runtime.getURL('themes/image/background.webp');
-      cssContent = cssContent.replace(/BACKGROUND_IMAGE_URL_PLACEHOLDER/g, imageUrl);
-      console.log('Background image URL replaced with:', imageUrl);
+      if (hasActiveBackground) {
+        // Skip setting background - let the background system handle it
+        cssContent = cssContent.replace(/\/\* Simple body styling with background image \*\/[\s\S]*?background-repeat: no-repeat !important;\s*color: #ffffff !important;\s*font-family: -apple-system[^}]*}/g, 
+          `/* Background handled by background system */
+          body {
+            color: #ffffff !important;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+          }`);
+        console.log('Active background detected, skipping theme background');
+      } else {
+        // Use theme background as normal
+        const imageUrl = chrome.runtime.getURL('themes/image/background.webp');
+        cssContent = cssContent.replace(/BACKGROUND_IMAGE_URL_PLACEHOLDER/g, imageUrl);
+        console.log('Background image URL replaced with:', imageUrl);
+      }
     }
     
     return cssContent;
