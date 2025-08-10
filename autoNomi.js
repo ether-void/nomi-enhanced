@@ -287,6 +287,25 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     
     // Return true to indicate we will send a response asynchronously
     return true;
+  } else if (message.action === 'toggleCommandSystem') {
+    console.log('Nomi.ai Auto-Play: Command system toggle received, command system is now', message.enabled ? 'enabled' : 'disabled');
+    
+    // Store the setting
+    chrome.storage.local.set({ 'commandSystemEnabled': message.enabled });
+    
+    if (message.enabled) {
+      // Re-initialize the command system if it was disabled
+      if (window.commandSystem && window.commandSystem.initializeCommandSystem) {
+        window.commandSystem.initializeCommandSystem();
+      }
+    } else {
+      // Disable command system by removing listeners
+      if (window.commandSystem && window.commandSystem.removeCommandSystemListeners) {
+        window.commandSystem.removeCommandSystemListeners();
+      }
+    }
+    
+    sendResponse({ success: true });
   }
 });
 

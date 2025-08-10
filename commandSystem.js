@@ -5,6 +5,10 @@
 
 // Command system variables
 let commandDropdown = null;
+let commandSystemInitialized = false;
+let inputListener = null;
+let keydownListener = null;
+let clickListener = null;
 
 /**
  * Get all available commands
@@ -290,10 +294,43 @@ function showCommandFeedback(message) {
 }
 
 /**
+ * Remove command system event listeners
+ */
+function removeCommandSystemListeners() {
+  if (inputListener) {
+    document.removeEventListener('input', inputListener);
+    inputListener = null;
+  }
+  if (keydownListener) {
+    document.removeEventListener('keydown', keydownListener, true);
+    keydownListener = null;
+  }
+  if (clickListener) {
+    document.removeEventListener('click', clickListener);
+    clickListener = null;
+  }
+  hideCommandSuggestions();
+}
+
+/**
  * Initialize command system
  */
-function initializeCommandSystem() {
-  document.addEventListener('input', (e) => {
+async function initializeCommandSystem() {
+  // Check if command system is enabled
+  const result = await chrome.storage.local.get('commandSystemEnabled');
+  const commandSystemEnabled = result.commandSystemEnabled !== false; // Default to true
+  
+  if (!commandSystemEnabled) {
+    console.log('Command system disabled');
+    removeCommandSystemListeners();
+    commandSystemInitialized = false;
+    return;
+  }
+
+  // Remove existing listeners if any
+  removeCommandSystemListeners();
+
+  inputListener = (e) => {
     const chatInput = document.querySelector(SELECTORS.CHAT_INPUT);
     if (chatInput && e.target === chatInput) {
       const text = chatInput.value;
@@ -303,9 +340,9 @@ function initializeCommandSystem() {
         hideCommandSuggestions();
       }
     }
-  });
-  
-  document.addEventListener('keydown', (e) => {
+  };
+
+  keydownListener = (e) => {
     const chatInput = document.querySelector(SELECTORS.CHAT_INPUT);
     if (chatInput && document.activeElement === chatInput) {
       const text = chatInput.value;
@@ -340,21 +377,29 @@ function initializeCommandSystem() {
         handleExtensionCommand(text.trim()).catch(console.error);
       }
     }
-  }, true);
-  
-  // Hide dropdown when clicking elsewhere
-  document.addEventListener('click', (e) => {
+  };
+
+  clickListener = (e) => {
     const chatInput = document.querySelector(SELECTORS.CHAT_INPUT);
     if (e.target !== chatInput && !commandDropdown?.contains(e.target)) {
       hideCommandSuggestions();
     }
-  });
+  };
+
+  document.addEventListener('input', inputListener);
+  document.addEventListener('keydown', keydownListener, true);
+  document.addEventListener('click', clickListener);
+  
+  commandSystemInitialized = true;
+  console.log('Command system initialized');
 }
 
 // Export for use in main extension
 window.commandSystem = {
   initializeCommandSystem,
   handleExtensionCommand,
-  showCommandFeedback
+  showCommandFeedback,
+  hideCommandSuggestions,
+  removeCommandSystemListeners
 };
 
