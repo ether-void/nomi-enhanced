@@ -27,7 +27,7 @@ A Chrome browser extension that enhances your Nomi AI (nomi.ai) experience with 
 3. Find "Nomi Enhanced" and click the refresh/reload button
 4. Or replace the extension folder and reload
 
-**Current Version: 1.4.0** - See [CHANGELOG.md](CHANGELOG.md) for updates
+**Current Version: 1.4.1** - See [CHANGELOG.md](CHANGELOG.md) for updates
 
 ## Usage
 

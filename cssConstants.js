@@ -36,7 +36,7 @@ const INPUT_SELECTORS = {
 
 // Elements to hide in minimalistic theme
 const HIDDEN_ELEMENTS = {
-  LEFT_SIDEBAR: '.css-1koxnnz',
+  LEFT_SIDEBAR: '.css-3ut7tk',
   BOTTOM_NAVIGATION: '.css-mxn7fm',
   CHAT_HEADER: '.css-1hcto2w',
   TOP_HEADER: '.css-n7u4e3'

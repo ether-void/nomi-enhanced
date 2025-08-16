@@ -2,6 +2,11 @@
 
 All notable changes to Nomi Enhanced will be documented in this file.
 
+## [1.4.1] - 2025-08-16
+
+### Fixed
+- Fixed the issue due to the class name change on sidebar
+
 ## [1.4.0] - 2025-08-08
 
 ### Added
