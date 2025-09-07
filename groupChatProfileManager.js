@@ -188,7 +188,7 @@ class GroupChatProfileManager {
     this.originalVisibility.clear();
     
     // Find the profile container
-    const profileContainer = document.querySelector('.css-1c0usqt.exd19tt2');
+    const profileContainer = document.querySelector(CSS_SELECTORS.GROUP_CHAT.PROFILE_CONTAINER);
     if (!profileContainer) {
       console.log('GroupChatProfileManager: Profile container not found');
       return;
@@ -331,7 +331,7 @@ class GroupChatProfileManager {
     }
     
     // Hide all profiles except the target one and expand the active profile
-    const profileContainer = document.querySelector('.css-1c0usqt.exd19tt2');
+    const profileContainer = document.querySelector(CSS_SELECTORS.GROUP_CHAT.PROFILE_CONTAINER);
     if (!profileContainer) return;
     
     // Calculate the actual container height

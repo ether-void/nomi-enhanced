@@ -72,7 +72,7 @@ const SCROLLBAR_SELECTORS = {
 // Group chat profile selectors
 const GROUP_CHAT_SELECTORS = {
   PROFILE_SIDEBAR: '.css-1ruxp1v.exd19tt0',
-  PROFILE_CONTAINER: '.css-1c0usqt.exd19tt2',
+  PROFILE_CONTAINER: '.css-1j7y90h.eco4y9y0',
   PROFILE_GRID: '.css-1j7y90h.e10yhkdj0',
   PROFILE_PICTURE: '.css-1c0usqt.exd19tt2 [height="210"]',
   NOMI_NAME_ELEMENT: '.css-zhge4h'
