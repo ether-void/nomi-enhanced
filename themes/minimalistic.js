@@ -168,6 +168,12 @@ const MINIMALISTIC_THEME = {
       background: rgba(0, 0, 0, 0.7) !important;
       border: 1px solid rgba(255, 255, 255, 0.15) !important;
     }
+
+    /* Remove background from chat input container */
+
+    ${CSS_SELECTORS.INPUT.CHAT_INPUT_CONTAINER} {
+      background: transparent !important;
+    }
     
     /* Simple input styling */
     ${CSS_SELECTORS.INPUT.CHAT_INPUT} {
