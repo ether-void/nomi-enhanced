@@ -29,7 +29,7 @@ const LAYOUT_SELECTORS = {
 
 // Input and interaction selectors
 const INPUT_SELECTORS = {
-  CHAT_INPUT_CONTAINER: '.css-4mgmx7.e4bbyan0',
+  CHAT_INPUT_CONTAINER: '.css-4mgmx7.e4bbyan0, .css-1sphkbo.e6sd4ql0',
   CHAT_INPUT: 'textarea[aria-label="Chat Input"], textarea[aria-label="Group Chat Input"]',
   CHAT_INPUT_USER: 'textarea[aria-label="Chat Input"]',
   CHAT_INPUT_GROUP: 'textarea[aria-label="Group Chat Input"]'
